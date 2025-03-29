@@ -1,0 +1,30 @@
+name: Video Downloader Automation
+
+on:
+  workflow_dispatch:
+    inputs:
+      video_url:
+        description: "Masukkan URL video yang ingin diunduh"
+        required: true
+        type: string
+
+jobs:
+  download_video:
+    runs-on: ubuntu-latest  # Menjalankan di Ubuntu
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.12"
+
+      - name: Install Dependencies
+        run: |
+          pip install yt-dlp requests tqdm
+
+      - name: Run Video Downloader Script
+        run: |
+          python url4.py "${{ github.event.inputs.video_url }}"
