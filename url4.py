@@ -1,6 +1,7 @@
 import os
 import sys
 import argparse
+import subprocess
 import requests
 import yt_dlp
 from tqdm import tqdm
@@ -11,7 +12,10 @@ def get_video_info(url):
         'quiet': True,
         'format': 'best',
         'noplaylist': True,
-        'dump_single_json': True
+        'dump_single_json': True,
+        'http_headers': {
+            'User-Agent': 'Mozilla/5.0'
+        }
     }
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
@@ -31,14 +35,27 @@ def get_file_size(url):
         return 0
 
 def download_video(url, filename="video.mp4"):
-    """Mengunduh video menggunakan aria2c dengan multi-threading dan resume"""
+    """Mengunduh video menggunakan aria2c dengan multi-threading dan resume,
+    serta menampilkan output progress secara realtime."""
     print(f"\n🚀 Memulai download dengan multi-threaded mode...\n")
     file_size = get_file_size(url)
     print(f"📦 Ukuran file: {file_size:.2f} MB")
     
     # Perintah aria2c: -x 16 (max connection per server), -s 16 (segmen per download), -c (lanjutkan download)
     cmd = f'aria2c -x 16 -s 16 -c "{url}" -o "{filename}"'
-    os.system(cmd)
+    process = subprocess.Popen(
+        cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True
+    )
+    
+    # Membaca output dari proses secara realtime dan tampilkan ke konsol
+    while True:
+        output = process.stdout.readline()
+        if output == "" and process.poll() is not None:
+            break
+        if output:
+            print(output, end="")
+    
+    process.wait()
     print(f"\n✅ Download selesai: {filename}")
 
 def select_format(formats, resolution):
