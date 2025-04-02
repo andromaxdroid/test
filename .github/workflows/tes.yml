@@ -34,7 +34,7 @@ jobs:
 
       - name: Install Dependencies
         run: |
-          apt update
+          sudo apt-get update
           pip install -U yt-dlp
 
       - name: Run Video Downloader
