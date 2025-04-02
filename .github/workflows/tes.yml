@@ -38,7 +38,7 @@ jobs:
           pip install -U yt-dlp
 
       - name: Run Video Downloader
-        run: yt-dlp "${{ github.event.inputs.video_url }}"
+        run: yt-dlp https://www.eporner.com/video-4e8ZwTDdbvv/heather-honey/
 
       - name: Upload Video
         uses: actions/upload-artifact@v4
