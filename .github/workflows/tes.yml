@@ -1,0 +1,47 @@
+name: test
+
+on:
+  workflow_dispatch:
+    inputs:
+      video_url:
+        description: 'Masukkan URL video'
+        required: true
+        type: string
+      resolution:
+        description: 'Pilih resolusi (1080p, 720p, 480p, 360p, 240p)'
+        required: true
+        default: '1080p'
+        type: choice
+        options:
+          - '1080p'
+          - '720p'
+          - '480p'
+          - '360p'
+          - '240p'
+
+jobs:
+  download-video:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install Dependencies
+        run: |
+          apt update
+          pip install -U yt-dlp
+
+      - name: Run Video Downloader
+        run: yt-dlp "${{ github.event.inputs.video_url }}"
+
+      - name: Upload Video
+        uses: actions/upload-artifact@v4
+        with:
+          name: downloaded-video
+          path: "*.mp4"
