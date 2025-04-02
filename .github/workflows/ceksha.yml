@@ -1,0 +1,25 @@
+name: Check SHA256
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  sha256sum:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Download Release Artifact
+        run: |
+          wget https://github.com/andromaxdroid/whisper.cpp/archive/refs/tags/v1.0.0.tar.gz -O yourtool-1.0.0.tar.gz
+
+      - name: Calculate SHA256
+        run: |
+          sha256sum yourtool-1.0.0.tar.gz
