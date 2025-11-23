@@ -1,0 +1,24 @@
+name: SSH with tmate
+
+on:
+  workflow_dispatch:
+
+jobs:
+  debug:
+    runs-on: ubuntu-latest
+    name: Start tmate session
+    steps:
+      - name: Install
+        run: sudo apt-get update && sudo apt-get install -y tmate
+
+      - name: Start 
+        run: |
+          tmate -S /tmp/tmate.sock new-session -d
+          tmate -S /tmp/tmate.sock wait tmate-ready
+
+      - name: Show SSH connection info
+        run: |
+          echo "🔗 SSH Command:"
+          tmate -S /tmp/tmate.sock display -p "#{tmate_ssh}"
+          echo "🌐 Web Terminal:"
+          tmate -S /tmp/tmate.sock display -p "#{tmate_web}"
