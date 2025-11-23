@@ -4,21 +4,27 @@ on:
   workflow_dispatch:
 
 jobs:
-  debug:
+  ssh:
     runs-on: ubuntu-latest
-    name: Start tmate session
     steps:
-      - name: Install
-        run: sudo apt-get update && sudo apt-get install -y tmate
+      - name: Install tmate
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y tmate
 
-      - name: Start 
+      - name: Start tmate session
         run: |
           tmate -S /tmp/tmate.sock new-session -d
           tmate -S /tmp/tmate.sock wait tmate-ready
 
-      - name: Show SSH connection info
+      - name: Show SSH info
         run: |
-          echo "🔗 SSH Command:"
+          echo "SSH Command:"
           tmate -S /tmp/tmate.sock display -p "#{tmate_ssh}"
-          echo "🌐 Web Terminal:"
+          echo "Web Terminal:"
           tmate -S /tmp/tmate.sock display -p "#{tmate_web}"
+
+      - name: KEEP SESSION ALIVE
+        run: |
+          echo "Tmate active. Workflow will NOT stop."
+          sleep infinity
