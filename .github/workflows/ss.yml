@@ -6,35 +6,48 @@ on:
 jobs:
   ssh:
     runs-on: ubuntu-22.04
+
     steps:
-      - name: Install tmate
+      - name: Install tools
         run: |
           sudo apt-get update
-          sudo apt-get install -y tmate fish
+          sudo apt-get install -y tmate fish zip wget gcc g++ \
+            gcc-aarch64-linux-gnu gcc-arm-linux-gnueabihf
 
-      - name: install gcc
-        run: sudo apt update && sudo apt install -y wget gcc g++ gcc-aarch64-linux-gnu gcc-arm-linux-gnueabi
+      - name: Install tools2
+        run: |
+          sudo apt update && apt upgrade && apt install nano bc bison ca-certificates curl flex gcc git libc6-dev libssl-dev openssl python3 ssh wget zip zstd sudo make clang gcc-arm-linux-gnueabi gcc-arm64-linux-gnueabi software-properties-common
 
-      - name: Install zip utility
-        run: sudo apt-get update && sudo apt-get install -y zip
+      - name: Download source
+        run: |
+          git clone https://github.com/alqix/android_kernel_xiaomi_mt6877.git kernel
 
-      - name: dowload source
-        run: git clone https://github.com/alqix/android_kernel_xiaomi_mt6877.git kernel
-             
+      - name: Download clang
+        run: |
+          cd kernel
+          wget -O clang.tar.xz https://github.com/Gonon-Kernel/gonon-clang/releases/download/16.0.6-20231104-release/GononClang-16.0.6-20231104.tar.xz
 
-      - name: dowload clang
-        run: cd kernel
-             wget -O clang.tar.xz https://github.com/Gonon-Kernel/gonon-clang/releases/download/16.0.6-20231104-release/GononClang-16.0.6-20231104.tar.xz
-
-      - name: unpack clang
-        run: cd kernel
-             tar -xvJf clang.tar.xz
+      - name: Unpack clang
+        run: |
+          cd kernel
+          tar -xvf clang.tar.xz
 
       - name: Start tmate session
         run: |
           tmate -S /tmp/tmate.sock new-session -d
           tmate -S /tmp/tmate.sock wait tmate-ready
 
+      - name: Show SSH info
+        run: |
+          echo "SSH Command:"
+          tmate -S /tmp/tmate.sock display -p "#{tmate_ssh}"
+          echo "Web Terminal:"
+          tmate -S /tmp/tmate.sock display -p "#{tmate_web}"
+
+      - name: KEEP SESSION ALIVE
+        run: |
+          echo "Tmate active. Workflow will NOT stop."
+          sleep infinity
       - name: Show SSH info
         run: |
           echo "SSH Command:"
