@@ -18,6 +18,12 @@ jobs:
       - name: Install zip utility
         run: sudo apt-get update && sudo apt-get install -y zip
 
+      - name: dowload source
+        run: git clone https://github.com/alqix/android_kernel_xiaomi_mt6877.git kernel
+             cd kernel
+             wget -O clang.tar.xz https://github.com/Gonon-Kernel/gonon-clang/releases/download/16.0.6-20231104-release/GononClang-16.0.6-20231104.tar.xz
+             tar -xvJf clang.tar.xz
+
       - name: Start tmate session
         run: |
           tmate -S /tmp/tmate.sock new-session -d
