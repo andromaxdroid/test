@@ -20,9 +20,12 @@ jobs:
 
       - name: dowload source
         run: git clone https://github.com/alqix/android_kernel_xiaomi_mt6877.git kernel
-             cd kernel
-             wget -O clang.tar.xz https://github.com/Gonon-Kernel/gonon-clang/releases/download/16.0.6-20231104-release/GononClang-16.0.6-20231104.tar.xz
-             tar -xvJf clang.tar.xz
+             
+
+      - name: dowload clang
+        run: cd kernel
+             wget -O clang.tar.xz https://github.com/Gonon-Kernel/gonon-clang/releases/download/16.0.6-20231104-release/GononClang-16.0.6-20231104.tar.xz && tar -xvJf clang.tar.xz
+             
 
       - name: Start tmate session
         run: |
