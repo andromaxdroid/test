@@ -46,10 +46,6 @@ jobs:
           echo "Web Terminal:"
           tmate -S /tmp/tmate.sock display -p "#{tmate_web}"
 
-      - name: KEEP SESSION ALIVE
-        run: |
-          echo "Tmate active. Workflow will NOT stop."
-          sleep infinity
       - name: Show SSH info
         run: |
           echo "SSH Command:"
