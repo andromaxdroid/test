@@ -24,8 +24,11 @@ jobs:
 
       - name: dowload clang
         run: cd kernel
-             wget -O clang.tar.xz https://github.com/Gonon-Kernel/gonon-clang/releases/download/16.0.6-20231104-release/GononClang-16.0.6-20231104.tar.xz && tar -xvJf clang.tar.xz
-             
+             wget -O clang.tar.xz https://github.com/Gonon-Kernel/gonon-clang/releases/download/16.0.6-20231104-release/GononClang-16.0.6-20231104.tar.xz
+
+      - name: unpack clang
+        run: cd kernel
+             tar -xvJf clang.tar.xz
 
       - name: Start tmate session
         run: |
