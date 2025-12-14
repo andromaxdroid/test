@@ -1,4 +1,4 @@
-name: kernel build
+name: trancibe
 
 on:
   workflow_dispatch:
@@ -18,7 +18,7 @@ on:
       
 
 jobs:
-  ssh:
+  transcibe:
     runs-on: ubuntu-22.04
 
     steps:
