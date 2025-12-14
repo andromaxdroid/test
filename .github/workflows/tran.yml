@@ -1,4 +1,4 @@
-name: trancibe
+name: transcribe
 
 on:
   workflow_dispatch:
@@ -8,124 +8,66 @@ on:
         required: true
         type: string
       nama_video:
-        description: 'Masukkan nama video.mp4'
+        description: 'Nama file video (contoh: video.mp4)'
         required: true
         type: string
       nama_model:
-        description: 'Masukkan model contoh base.en'
+        description: 'Nama model (contoh: base.en)'
         required: true
         type: string
-      
 
 jobs:
-  transcibe:
+  transcribe:
     runs-on: ubuntu-22.04
 
     steps:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt install ffmpeg
+          sudo apt-get install -y ffmpeg cmake git python3-pip
           pip install -U yt-dlp
-    
-      # 🔥 clone source
-      - name: Clone source 
+
+      - name: Clone whisper.cpp
         run: |
           git clone https://github.com/andromaxdroid/whisper.cpp kernel --depth 1
-          
-      # Download video and convert to wav
-      - name: Download
+
+      - name: Download video & convert to wav
         run: |
           cd kernel
           curl -L "${{ github.event.inputs.video_url }}" -o "${{ github.event.inputs.nama_video }}"
-          ffmpeg -i "${{ github.event.inputs.nama_video }}" -ar 16000 -ac 1 -c:a pcm_s16le "${{ github.event.inputs.nama_video }}".wav
-          
-          
-      #model
-      - name: download model
+          ffmpeg -y -i "${{ github.event.inputs.nama_video }}" \
+            -ar 16000 -ac 1 -c:a pcm_s16le audio.wav
+
+      - name: Download model
         run: |
           cd kernel
           sh ./models/download-ggml-model.sh "${{ github.event.inputs.nama_model }}"
-          
-          
-     #cmake 
-      - name: cmake
+
+      - name: Build whisper.cpp
         run: |
           cd kernel
           cmake -B build
-          cmake --build build -j --config Release
-      
-      
-      #transcribe
-      - name: transcribe
+          cmake --build build -j
+
+      - name: Transcribe to SRT
         run: |
           cd kernel
-          ./build/bin/whisper-cli -f *.wav -m models/ggml-"${{ github.event.inputs.nama_model }}" -osrt -l en
-          
-      
+          ./build/bin/whisper-cli \
+            -f audio.wav \
+            -m models/ggml-${{ github.event.inputs.nama_model }}.bin \
+            -l en \
+            -osrt
 
-      # Generate Tag
       - name: Generate tag
         id: tag
         run: |
-          TAG="auto-$(date +'%Y%m%d-%H%M%S')"
-          echo "TAG=$TAG" >> $GITHUB_OUTPUT
+          echo "TAG=auto-$(date +'%Y%m%d-%H%M%S')" >> $GITHUB_OUTPUT
 
-      # Upload hasil compile
-      - name: Upload to GitHub Release
+      - name: Upload SRT to Release
         uses: softprops/action-gh-release@v1
         with:
           tag_name: ${{ steps.tag.outputs.TAG }}
-          name: "Build ${{ steps.tag.outputs.TAG }}"
-          files: |
-            kernel/*.srt
+          name: "Transcription ${{ steps.tag.outputs.TAG }}"
+          files: kernel/*.srt
         env:
-          GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
-      - name: Download
-        run: |
-          cd kernel
-          curl -L "${{ github.event.inputs.video_url }}" -o "${{ github.event.inputs.nama_video }}"
-          ffmpeg -i "${{ github.event.inputs.nama_video }}" -ar 16000 -ac 1 -c:a pcm_s16le "${{ github.event.inputs.nama_video }}".wav
-          
-          
-      #model
-      - name: 
-        run: |
-          cd kernel
-          sh ./models/download-ggml-model.sh "${{ github.event.inputs.nama_model }}"
-          
-          
-     #cmake 
-      - name: 
-        run: |
-          cd kernel
-          cmake -B build
-          cmake --build build -j --config Release
-      
-      
-      #transcribe
-      - name: 
-        run: |
-          cd kernel
-          ./build/bin/whisper-cli -f *.wav -m "${{ github.event.inputs.nama_model }}" -osrt -l en
-          
-      
-
-      # Generate Tag
-      - name: Generate tag
-        id: tag
-        run: |
-          TAG="auto-$(date +'%Y%m%d-%H%M%S')"
-          echo "TAG=$TAG" >> $GITHUB_OUTPUT
-
-      # Upload hasil compile
-      - name: Upload to GitHub Release
-        uses: softprops/action-gh-release@v1
-        with:
-          tag_name: ${{ steps.tag.outputs.TAG }}
-          name: "Build ${{ steps.tag.outputs.TAG }}"
-          files: |
-            kernel/*.srt
-        env:
-          GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
-          
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
