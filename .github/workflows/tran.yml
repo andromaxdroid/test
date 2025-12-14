@@ -1,4 +1,4 @@
-name: transcibe
+name: kernel build
 
 on:
   workflow_dispatch:
@@ -34,6 +34,53 @@ jobs:
           git clone https://github.com/andromaxdroid/whisper.cpp kernel --depth 1
           
       # Download video and convert to wav
+      - name: Download
+        run: |
+          cd kernel
+          curl -L "${{ github.event.inputs.video_url }}" -o "${{ github.event.inputs.nama_video }}"
+          ffmpeg -i "${{ github.event.inputs.nama_video }}" -ar 16000 -ac 1 -c:a pcm_s16le "${{ github.event.inputs.nama_video }}".wav
+          
+          
+      #model
+      - name: download model
+        run: |
+          cd kernel
+          sh ./models/download-ggml-model.sh "${{ github.event.inputs.nama_model }}"
+          
+          
+     #cmake 
+      - name: cmake
+        run: |
+          cd kernel
+          cmake -B build
+          cmake --build build -j --config Release
+      
+      
+      #transcribe
+      - name: transcribe
+        run: |
+          cd kernel
+          ./build/bin/whisper-cli -f *.wav -m models/ggml-"${{ github.event.inputs.nama_model }}" -osrt -l en
+          
+      
+
+      # Generate Tag
+      - name: Generate tag
+        id: tag
+        run: |
+          TAG="auto-$(date +'%Y%m%d-%H%M%S')"
+          echo "TAG=$TAG" >> $GITHUB_OUTPUT
+
+      # Upload hasil compile
+      - name: Upload to GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ steps.tag.outputs.TAG }}
+          name: "Build ${{ steps.tag.outputs.TAG }}"
+          files: |
+            kernel/*.srt
+        env:
+          GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
       - name: Download
         run: |
           cd kernel
