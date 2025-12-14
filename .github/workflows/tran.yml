@@ -12,9 +12,20 @@ on:
         required: true
         type: string
       nama_model:
-        description: 'Nama model (contoh: base.en)'
+        description: 'Pilih model Whisper'
         required: true
-        type: string
+        type: choice
+        options:
+          - tiny
+          - tiny.en
+          - base
+          - base.en
+          - small
+          - small.en
+          - medium
+          - medium.en
+          - medium-q8_0
+          - large-v3-turbo-q8_0
 
 jobs:
   transcribe:
