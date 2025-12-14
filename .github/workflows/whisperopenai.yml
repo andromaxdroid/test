@@ -1,0 +1,81 @@
+name: transcribe
+
+on:
+  workflow_dispatch:
+    inputs:
+      video_url:
+        description: 'Masukkan URL video'
+        required: true
+        type: string
+      nama_video:
+        description: 'Nama file video (contoh: video)'
+        required: true
+        type: string
+      nama_model:
+        description: 'Pilih model Whisper'
+        required: true
+        type: choice
+        options:
+          - tiny
+          - tiny.en
+          - base
+          - base.en
+          - small
+          - small.en
+          - medium
+          - medium.en
+          - large
+          - turbo
+
+jobs:
+  transcribe:
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg cmake git python3-pip
+          pip install -U yt-dlp
+          pip install -U openai-whisper
+          pip install setuptools-rust
+
+      - name: make folder
+        run: |
+          mkdir kernel
+
+      - name: Download video & convert to wav
+        run: |
+          cd kernel
+          curl -L "${{ github.event.inputs.video_url }}" -o "${{ github.event.inputs.nama_video }}".mp4
+          ffmpeg -y -i "${{ github.event.inputs.nama_video }}".mp4 \
+            -ar 16000 -ac 1 -c:a pcm_s16le audio.wav
+
+
+      - name: Transcribe to SRT
+        run: |
+          cd kernel
+          whisper \
+            audio.wav \
+            --model ${{ github.event.inputs.nama_model }} \
+            --language en \
+            --output_format srt
+            
+      - name: mv
+        run: |
+          cd kernel
+          mv *.srt  "${{ github.event.inputs.nama_video }}".srt
+
+      - name: Generate tag
+        id: tag
+        run: |
+          echo "TAG=auto-$(date +'%Y%m%d-%H%M%S')" >> $GITHUB_OUTPUT
+
+      - name: Upload SRT to Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ steps.tag.outputs.TAG }}
+          name: "Transcription ${{ steps.tag.outputs.TAG }}"
+          files: kernel/*.srt
+        env:
+          GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
