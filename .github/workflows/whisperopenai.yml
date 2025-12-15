@@ -57,7 +57,9 @@ jobs:
           pip install -U yt-dlp
           pip install -U openai-whisper
           pip install setuptools-rust
-
+          
+      - name: Set start time
+        run: echo "START_TIME=$(date +%s)" >> $GITHUB_ENV
 
       - name: Transcribe to SRT
         run: |
@@ -68,7 +70,19 @@ jobs:
             --language en \
             --output_format srt
             
-      - name: mv
+      - name: Calculate duration
+        run: |
+          END_TIME=$(date +%s)
+          DURATION=$((END_TIME - START_TIME))
+          echo "DURATION_SECONDS=$DURATION" >> $GITHUB_ENV
+      
+      - name: Format duration
+        run: |
+          M=$((DURATION_SECONDS / 60))
+          S=$((DURATION_SECONDS % 60))
+          echo "DURATION_FORMAT=${M}m ${S}s" >> $GITHUB_ENV
+            
+      - name: rename
         run: |
           cd kernel
           mv *.srt  "${{ github.event.inputs.nama_video }}".srt
@@ -92,6 +106,8 @@ jobs:
             - subtitle name : ${{ github.event.inputs.nama_video }}.srt
             
             - whisper model : 📊 **${{ github.event.inputs.nama_model }}**
+            
+            - Build Duration : 🕐 **${{ env.DURATION_FORMAT }}**
             
             - date :  ${{ github.run_id }}
           files: kernel/${{ github.event.inputs.nama_video }}.srt
