@@ -87,9 +87,12 @@ jobs:
             #whisperopenai #Andromax
 
             ⚙️ **Build Infomation:**
-            - build succesfuly whisper open ai
-            - subtile name : "${{ github.event.inputs.nama_video }}".srt
-            - whisper model : "${{ github.event.inputs.nama_model }}"
+            - build succesfuly
+            
+            - subtitle name : ${{ github.event.inputs.nama_video }}.srt
+            
+            - whisper model : 📊 **${{ github.event.inputs.nama_model }}**
+            
             - date :  ${{ github.run_id }}
           files: kernel/${{ github.event.inputs.nama_video }}.srt
         env:
