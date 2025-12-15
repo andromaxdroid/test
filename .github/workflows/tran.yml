@@ -15,6 +15,7 @@ on:
         description: 'Pilih model Whisper'
         required: true
         type: choice
+        default: "base.en"
         options:
           - tiny
           - tiny.en
@@ -26,6 +27,14 @@ on:
           - medium.en
           - medium-q8_0
           - large-v3-turbo-q8_0
+      send_to_telegram:
+        description: "Whatever send to telegram ci channel or not"
+        required: true
+        type: choice
+        default: "true"
+        options:
+          - "true"
+          - "false"
 
 jobs:
   transcribe:
@@ -59,6 +68,9 @@ jobs:
           cd kernel
           cmake -B build
           cmake --build build -j --config Release
+          
+      - name: Set start time
+        run: echo "START_TIME=$(date +%s)" >> $GITHUB_ENV
 
       - name: Transcribe to SRT
         run: |
@@ -69,7 +81,19 @@ jobs:
             -l en \
             -osrt
             
-      - name: mv
+      - name: Calculate duration
+        run: |
+          END_TIME=$(date +%s)
+          DURATION=$((END_TIME - START_TIME))
+          echo "DURATION_SECONDS=$DURATION" >> $GITHUB_ENV
+      
+      - name: Format duration
+        run: |
+          M=$((DURATION_SECONDS / 60))
+          S=$((DURATION_SECONDS % 60))
+          echo "DURATION_FORMAT=${M}m ${S}s" >> $GITHUB_ENV
+            
+      - name: rename
         run: |
           cd kernel
           mv audio.wav.srt  "${{ github.event.inputs.nama_video }}".srt
@@ -79,11 +103,26 @@ jobs:
         run: |
           echo "TAG=auto-$(date +'%Y%m%d-%H%M%S')" >> $GITHUB_OUTPUT
 
-      - name: Upload SRT to Release
-        uses: softprops/action-gh-release@v1
+      - name: Upload SRT to TELEGRAM
+        uses: xz-dev/TelegramFileUploader@v1.1.1
+        if: ${{ always() && github.event.inputs.send_to_telegram == 'true' }}
         with:
-          tag_name: ${{ steps.tag.outputs.TAG }}
-          name: "Transcription ${{ steps.tag.outputs.TAG }}"
-          files: kernel/*.srt
+          to-who: '${{ secrets.TELEGRAM_API_TO_WHO }}'
+          message: |
+            #whisper.cpp #Andromax
+
+            ⚙️ **Build Infomation:**
+            - build succesfuly
+            
+            - subtitle name : ${{ github.event.inputs.nama_video }}.srt
+            
+            - whisper model : 📊 **${{ github.event.inputs.nama_model }}**
+            
+            - Build Duration : 🕐 **${{ env.DURATION_FORMAT }}**
+            
+            - date :  ${{ github.run_id }}
+          files: kernel/${{ github.event.inputs.nama_video }}.srt
         env:
-          GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
+          API_ID: ${{ secrets.TELEGRAM_API_ID }}
+          API_HASH: ${{ secrets.TELEGRAM_API_HASH }}
+          BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
