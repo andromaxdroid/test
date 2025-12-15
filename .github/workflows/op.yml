@@ -1,0 +1,80 @@
+name: transcribe
+
+on:
+  workflow_dispatch:
+    inputs:
+      video_url:
+        description: 'Masukkan URL video'
+        required: true
+        type: string
+      nama_video:
+        description: 'Nama file video (contoh: video)'
+        required: true
+        type: string
+      nama_model:
+        description: 'Pilih model Whisper'
+        required: true
+        default: "base.en"
+        type: choice
+        options:
+          - tiny
+          - tiny.en
+          - base
+          - base.en
+          - small
+          - small.en
+          - medium
+          - medium.en
+          - large
+          - turbo
+      send_to_telegram:
+        description: "Whatever send to telegram ci channel or not"
+        required: true
+        type: choice
+        default: "true"
+        options:
+          - "true"
+          - "false"
+
+jobs:
+  transcribe:
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Download video & convert to wav
+        run: |
+          mkdir kernel
+          sudo apt-get install -y ffmpeg
+          cd kernel
+          curl -L "${{ github.event.inputs.video_url }}" -o "${{ github.event.inputs.nama_video }}".mp4
+          ffmpeg -y -i "${{ github.event.inputs.nama_video }}".mp4 \
+            -ar 16000 -ac 1 -c:a pcm_s16le audio.wav
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          
+
+      - name: Generate tag
+        id: tag
+        run: |
+          echo "TAG=auto-$(date +'%Y%m%d-%H%M%S')" >> $GITHUB_OUTPUT
+
+      - name: Upload SRT to TELEGRAM
+        uses: xz-dev/TelegramFileUploader@v1.1.1
+        if: ${{ always() && github.event.inputs.send_to_telegram == 'true' }}
+        with:
+          to-who: '${{ secrets.TELEGRAM_API_TO_WHO }}'
+          message: |
+            #whisperopenai #Andromax
+
+            ⚙️ **Build Infomation:**
+            - build succesfuly whisper open ai
+            - subtile name : "${{ github.event.inputs.nama_video }}".srt
+            - whisper model : "${{ github.event.inputs.nama_model }}"
+            - date :  ${{ github.run_id }}
+          files: kernel/audio.wav
+        env:
+          API_ID: ${{ secrets.TELEGRAM_API_ID }}
+          API_HASH: ${{ secrets.TELEGRAM_API_HASH }}
+          BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
