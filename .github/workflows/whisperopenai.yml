@@ -26,6 +26,14 @@ on:
           - medium.en
           - large
           - turbo
+      send_to_telegram:
+        description: "Whatever send to telegram ci channel or not"
+        required: true
+        type: choice
+        default: "true"
+        options:
+          - "true"
+          - "false"
 
 jobs:
   transcribe:
@@ -69,11 +77,20 @@ jobs:
         run: |
           echo "TAG=auto-$(date +'%Y%m%d-%H%M%S')" >> $GITHUB_OUTPUT
 
-      - name: Upload SRT to Release
-        uses: softprops/action-gh-release@v1
+      - name: Upload SRT to TELEGRAM
+        uses: xz-dev/TelegramFileUploader@v1.1.1
+        if: ${{ always() && github.event.inputs.send_to_telegram == 'true' }}
         with:
-          tag_name: ${{ steps.tag.outputs.TAG }}
-          name: "Transcription ${{ steps.tag.outputs.TAG }}"
+          to-who: '${{ secrets.TELEGRAM_API_TO_WHO }}'
+          message: |
+            #whisperopenai #Andromax
+
+            ⚙️ **Build Infomation:**
+            - build succesfuly
+            - subtile name : "${{ github.event.inputs.nama_video }}".srt
+            - date :  ${{ github.run_id }}
           files: kernel/*.srt
         env:
-          GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
+          API_ID: ${{ secrets.TELEGRAM_API_ID }}
+          API_HASH: ${{ secrets.TELEGRAM_API_HASH }}
+          BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
