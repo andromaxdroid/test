@@ -14,6 +14,7 @@ on:
       nama_model:
         description: 'Pilih model Whisper'
         required: true
+        default: "base.en"
         type: choice
         options:
           - tiny
@@ -89,7 +90,7 @@ jobs:
             - build succesfuly
             - subtile name : "${{ github.event.inputs.nama_video }}".srt
             - date :  ${{ github.run_id }}
-          files: kernel/*.srt
+          files: kernel/"${{ github.event.inputs.nama_video }}".srt
         env:
           API_ID: ${{ secrets.TELEGRAM_API_ID }}
           API_HASH: ${{ secrets.TELEGRAM_API_HASH }}
