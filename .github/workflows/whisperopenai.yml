@@ -86,9 +86,10 @@ jobs:
       
       - name: Format duration
         run: |
+          H=$((DURATION_SECONDS / 3600))
           M=$((DURATION_SECONDS / 60))
           S=$((DURATION_SECONDS % 60))
-          echo "DURATION_FORMAT=${M}m ${S}s" >> $GITHUB_ENV
+          echo "DURATION_FORMAT=${H}h ${M}m ${S}s" >> $GITHUB_ENV
           
       - name: Format build date
         run: |
