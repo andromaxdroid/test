@@ -35,7 +35,7 @@ on:
         options:
           - "true"
           - "false"
-      send_to_telegram:
+      send_to_github:
         description: "send to github realese or not"
         required: true
         type: choice
