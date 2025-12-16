@@ -81,8 +81,13 @@ jobs:
           M=$((DURATION_SECONDS / 60))
           S=$((DURATION_SECONDS % 60))
           echo "DURATION_FORMAT=${M}m ${S}s" >> $GITHUB_ENV
+          
+      - name: Format build date
+        run: |
+          TZ=Asia/Jakarta date '+%d-%m-%Y %H:%M:%S WIB'
+          echo "BUILD_DATE=$(TZ=Asia/Jakarta date '+%d-%m-%Y %H:%M:%S WIB')" >> $GITHUB_ENV
             
-      - name: rename
+      - name: mv
         run: |
           cd kernel
           mv *.srt  "${{ github.event.inputs.nama_video }}".srt
@@ -101,7 +106,7 @@ jobs:
             #whisperopenai #Andromax
 
             ⚙️ **Build Infomation:**
-            - build succesfuly
+            - build succesfuly by **Whisper Open Ai**
             
             - subtitle name : ${{ github.event.inputs.nama_video }}.srt
             
@@ -109,7 +114,7 @@ jobs:
             
             - Build Duration : 🕐 **${{ env.DURATION_FORMAT }}**
             
-            - date :  ${{ github.run_id }}
+            - date : 📅 **${{ env.BUILD_DATE }}**
           files: kernel/${{ github.event.inputs.nama_video }}.srt
         env:
           API_ID: ${{ secrets.TELEGRAM_API_ID }}
