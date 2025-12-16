@@ -101,7 +101,7 @@ jobs:
         uses: xz-dev/TelegramFileUploader@v1.1.1
         if: ${{ always() && github.event.inputs.send_to_telegram == 'true' }}
         with:
-          to-who: ${{ secrets.TELEGRAM_API_TO_WHO }}
+          to-who: '${{ secrets.TELEGRAM_API_TO_WHO }}'
           message: |
             #whisperopenai #Andromax
 
@@ -115,7 +115,8 @@ jobs:
             - Build Duration : 🕐 **${{ env.DURATION_FORMAT }}**
             
             - date : 📅 **${{ env.BUILD_DATE }}**
-          files: kernel/${{ github.event.inputs.nama_video }}.srt
+          files: |
+              kernel/${{ github.event.inputs.nama_video }}.srt
         env:
           API_ID: ${{ secrets.TELEGRAM_API_ID }}
           API_HASH: ${{ secrets.TELEGRAM_API_HASH }}
