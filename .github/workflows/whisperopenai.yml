@@ -35,6 +35,14 @@ on:
         options:
           - "true"
           - "false"
+      send_to_telegram:
+        description: "send to github realese or not"
+        required: true
+        type: choice
+        default: "false"
+        options:
+          - "true"
+          - "false"
 
 jobs:
   transcribe:
@@ -115,9 +123,18 @@ jobs:
             - Build Duration : 🕐 **${{ env.DURATION_FORMAT }}**
             
             - date : 📅 **${{ env.BUILD_DATE }}**
-          files: |
-              kernel/${{ github.event.inputs.nama_video }}.srt
+          files: kernel/${{ github.event.inputs.nama_video }}.srt
         env:
           API_ID: ${{ secrets.TELEGRAM_API_ID }}
           API_HASH: ${{ secrets.TELEGRAM_API_HASH }}
           BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          
+      - name: Upload SRT to Release
+        uses: softprops/action-gh-release@v1
+        if: ${{ always() && github.event.inputs.send_to_github == 'true' }}
+        with:
+          tag_name: ${{ steps.tag.outputs.TAG }}
+          name: "Transcription ${{ steps.tag.outputs.TAG }}"
+          files: kernel/*.srt
+        env:
+          GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
