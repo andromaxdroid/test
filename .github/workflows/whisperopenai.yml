@@ -101,7 +101,7 @@ jobs:
         uses: xz-dev/TelegramFileUploader@v1.1.1
         if: ${{ always() && github.event.inputs.send_to_telegram == 'true' }}
         with:
-          to-who: '${{ secrets.TELEGRAM_API_TO_WHO }}'
+          to-who: ${{ secrets.TELEGRAM_API_TO_WHO }}
           message: |
             #whisperopenai #Andromax
 
