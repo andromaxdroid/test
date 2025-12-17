@@ -35,6 +35,14 @@ on:
         options:
           - "true"
           - "false"
+      send_to_github:
+        description: "send to github realese or not"
+        required: true
+        type: choice
+        default: "false"
+        options:
+          - "true"
+          - "false"
 
 jobs:
   transcribe:
@@ -54,7 +62,12 @@ jobs:
       - name: Download video & convert to wav
         run: |
           cd kernel
-          curl -L "${{ github.event.inputs.video_url }}" -o "${{ github.event.inputs.nama_video }}".mp4
+          VIDEO="${{ github.event.inputs.video_url }}"
+          if [[ "$VIDEO" == *.mp4 ]]; then
+            curl -L "${{ github.event.inputs.video_url }}" -o "${{ github.event.inputs.nama_video }}".mp4
+          else
+            yt-dlp -f worst "${{ github.event.inputs.video_url }}" -o "${{ github.event.inputs.nama_video }}".mp4
+          fi
           ffmpeg -y -i "${{ github.event.inputs.nama_video }}".mp4 \
             -ar 16000 -ac 1 -c:a pcm_s16le audio.wav
 
@@ -89,14 +102,20 @@ jobs:
       
       - name: Format duration
         run: |
+          H=$((DURATION_SECONDS / 3600))
           M=$((DURATION_SECONDS / 60))
           S=$((DURATION_SECONDS % 60))
-          echo "DURATION_FORMAT=${M}m ${S}s" >> $GITHUB_ENV
+          echo "DURATION_FORMAT=${H}h ${M}m ${S}s" >> $GITHUB_ENV
             
-      - name: rename
+      - name: Format build date
+        run: |
+          TZ=Asia/Jakarta date '+%d-%m-%Y %H:%M:%S WIB'
+          echo "BUILD_DATE=$(TZ=Asia/Jakarta date '+%d-%m-%Y %H:%M:%S WIB')" >> $GITHUB_ENV
+            
+      - name: mv
         run: |
           cd kernel
-          mv audio.wav.srt  "${{ github.event.inputs.nama_video }}".srt
+          mv *.srt  "${{ github.event.inputs.nama_video }}".srt
 
       - name: Generate tag
         id: tag
@@ -112,7 +131,7 @@ jobs:
             #whisper.cpp #Andromax
 
             ⚙️ **Build Infomation:**
-            - build succesfuly
+            - build succesfuly by **Whisper.cpp**
             
             - subtitle name : ${{ github.event.inputs.nama_video }}.srt
             
@@ -120,9 +139,19 @@ jobs:
             
             - Build Duration : 🕐 **${{ env.DURATION_FORMAT }}**
             
-            - date :  ${{ github.run_id }}
+            - date : 📅 **${{ env.BUILD_DATE }}**
           files: kernel/${{ github.event.inputs.nama_video }}.srt
         env:
           API_ID: ${{ secrets.TELEGRAM_API_ID }}
           API_HASH: ${{ secrets.TELEGRAM_API_HASH }}
           BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          
+      - name: Upload SRT to Release
+        uses: softprops/action-gh-release@v1
+        if: ${{ always() && github.event.inputs.send_to_github == 'true' }}
+        with:
+          tag_name: ${{ steps.tag.outputs.TAG }}
+          name: "Transcription ${{ steps.tag.outputs.TAG }}"
+          files: kernel/*.srt
+        env:
+          GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
