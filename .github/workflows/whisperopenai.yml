@@ -50,19 +50,26 @@ jobs:
 
     steps:
       - name: Download video & convert to wav
+        if: ${{ always() && github.event.inputs.use_ytdlp == 'false' }}
         run: |
           mkdir kernel
-          sudo apt-get install -y ffmpeg
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg python3-pip
+          pip install -U yt-dlp
           cd kernel
-          curl -L "${{ github.event.inputs.video_url }}" -o "${{ github.event.inputs.nama_video }}".mp4
+          VIDEO="${{ github.event.inputs.video_url }}"
+          if [[ "$VIDEO" == *.mp4 ]]; then
+            curl -L "${{ github.event.inputs.video_url }}" -o "${{ github.event.inputs.nama_video }}".mp4
+          else
+            yt-dlp -f worst "${{ github.event.inputs.video_url }}" -o "${{ github.event.inputs.nama_video }}".mp4
+          fi
           ffmpeg -y -i "${{ github.event.inputs.nama_video }}".mp4 \
             -ar 16000 -ac 1 -c:a pcm_s16le audio.wav
-
       - name: Install dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y ffmpeg cmake git python3-pip
-          pip install -U yt-dlp
+          
           pip install -U openai-whisper
           pip install setuptools-rust
           
@@ -139,3 +146,9 @@ jobs:
           files: kernel/*.srt
         env:
           GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
+          
+          
+
+          
+
+          
