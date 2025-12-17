@@ -50,7 +50,6 @@ jobs:
 
     steps:
       - name: Download video & convert to wav
-        if: ${{ always() && github.event.inputs.use_ytdlp == 'false' }}
         run: |
           mkdir kernel
           sudo apt-get update
